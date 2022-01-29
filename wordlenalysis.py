@@ -21,7 +21,8 @@ def gen_guesses():
             yield guess.strip()
 
 
-def compare(guess, sol):
+def compare(sol, guess):
+    # breaks on BACON,AAAAA
     assert type(guess) == type(sol) == str
     assert len(guess) == len(sol) == 5
     guess = guess.upper()
@@ -31,7 +32,16 @@ def compare(guess, sol):
     for i in range(len(guess)):
         if guess[i] == sol[i]:
             out_str += GREEN
-            unclaimed.pop(unclaimed.index(guess[i]))
+            try:
+                unclaimed.pop(unclaimed.index(guess[i]))
+            except:
+                print('ERROR')
+                print('sol:',sol)
+                print('guess:',guess)
+                print('unclaimed:',unclaimed)
+                print('i:',i)
+                print('ERROR')
+                exit()
         elif guess[i] in unclaimed:
             out_str += YELLOW
             unclaimed.pop(unclaimed.index(guess[i]))
@@ -43,11 +53,13 @@ def compare(guess, sol):
 
 def test_compare():
     tests = [
-                ["hello", "HELIX", GREEN * 3 + GRAY * 2],
+                ["HELIX", "hello", GREEN * 3 + GRAY * 2],
                 ["AAAAA", "BBBBB", GRAY * 5],
-                ["aAaAa", "AaAAA", GREEN * 5],
-                ["helix", "hello", GREEN * 3 + GRAY * 2],
-                ["locus", "hello", YELLOW * 2 + GRAY * 3],
+                ["AaAAA", "aAaAa", GREEN * 5],
+                ["hello", "helix", GREEN * 3 + GRAY * 2],
+                ["hello", "locus", YELLOW * 2 + GRAY * 3],
+                ["aaaaa", "bacon", GRAY + GREEN + GRAY * 3],
+                ["bacon", "aaaaa", GREEN + GRAY * 4],
                 ["a", "a", None]
             ]
 
@@ -64,13 +76,18 @@ def test_compare():
                 print("FAIL")
 
 
-def gen_all_patterns(guess):
+test_compare()
+exit()
+
+def all_patterns(guess):
+    patterns = {}
     for sol in gen_solutions():
-        print(sol)
-        yield compare(guess, sol)
+        p = compare(sol, guess)
+        patterns[p] = patterns.get(p, 0) + 1
+    return patterns
+        
 
 for guess in gen_guesses():
-    for p in gen_all_patterns(guess):
-        print(guess)
-        print(p)
-        input()
+    print(all_patterns(guess))
+    input()
+    
