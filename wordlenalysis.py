@@ -124,16 +124,13 @@ for guess in gen_guesses():
     largest_bucket_size = guess_to_largest_bucket_size(guess)
     if num_buckets > records[MOST_BUCKETS][1]:
         records[MOST_BUCKETS] = (guess, num_buckets)
-        print(records)
     if num_buckets < records[LEAST_BUCKETS][1]:
         records[LEAST_BUCKETS] = (guess, num_buckets)
-        print(records)
     if largest_bucket_size > records[LARGEST_LARGEST_BUCKET][1]:
         records[LARGEST_LARGEST_BUCKET] = (guess, largest_bucket_size)
-        print(records)
     if largest_bucket_size < records[SMALLEST_LARGEST_BUCKET][1]:
         records[SMALLEST_LARGEST_BUCKET] = (guess, largest_bucket_size)
-        print(records)
+    print(guess + ": " + str(records), sep='', end='\r')
     
 print(records)
 
