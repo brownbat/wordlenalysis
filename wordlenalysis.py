@@ -22,19 +22,19 @@ def gen_guesses():
 
 
 def compare(sol, guess):
-    # breaks on BACON,AAAAA
     assert type(guess) == type(sol) == str
     assert len(guess) == len(sol) == 5
     guess = guess.upper()
     sol = sol.upper()
-    out_str = ""
+    out_str = list("     ")
     unclaimed = list(sol)
     for i in range(len(guess)):
         if guess[i] == sol[i]:
-            out_str += GREEN
+            out_str[i] = GREEN
             try:
                 unclaimed.pop(unclaimed.index(guess[i]))
             except:
+                # ugly error handling here
                 print('ERROR')
                 print('sol:',sol)
                 print('guess:',guess)
@@ -42,16 +42,21 @@ def compare(sol, guess):
                 print('i:',i)
                 print('ERROR')
                 exit()
-        elif guess[i] in unclaimed:
-            out_str += YELLOW
-            unclaimed.pop(unclaimed.index(guess[i]))
-        else:
-            assert guess[i] not in unclaimed
-            out_str += GRAY
+    for i in range(len(guess)):
+        if guess[i] != sol[i]:
+            if guess[i] in unclaimed:
+                out_str[i] = YELLOW
+                unclaimed.pop(unclaimed.index(guess[i]))
+            else:
+                assert guess[i] not in unclaimed
+                out_str[i] = GRAY
+    out_str = ''.join(out_str)
     assert len(out_str) == 5
     return out_str
 
 def test_compare():
+    # need more tests.
+    # i think abbba,bacon is testing lookahead, but could use more
     tests = [
                 ["HELIX", "hello", GREEN * 3 + GRAY * 2],
                 ["AAAAA", "BBBBB", GRAY * 5],
@@ -59,7 +64,9 @@ def test_compare():
                 ["hello", "helix", GREEN * 3 + GRAY * 2],
                 ["hello", "locus", YELLOW * 2 + GRAY * 3],
                 ["aaaaa", "bacon", GRAY + GREEN + GRAY * 3],
-                ["bacon", "aaaaa", GREEN + GRAY * 4],
+                ["bacon", "aaaaa", GRAY + GREEN + GRAY * 3],
+                ["abbba", "bacon", YELLOW * 2 + GRAY * 3],
+                ["bacon", "abbba", YELLOW * 2 + GRAY * 3],
                 ["a", "a", None]
             ]
 
@@ -68,6 +75,10 @@ def test_compare():
             if compare(t[0],t[1]) == t[2]:
                 print("PASS")
             else:
+                print(t[0])
+                print(t[1])
+                print(compare(t[0], t[1]))
+                print(t[2])
                 print("FAIL")
         except AssertionError:
             if t[2] == None:
