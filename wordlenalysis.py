@@ -1,9 +1,12 @@
-import os, sys
+import os
+import sys
 
-# TODO - add "answer_list" as a function variable to filter to each function below
+# TODO - add "answer_list" as a function variable to filter to each
+# function below
 # so you can search for best second guesses
 
-# or pick two first guesses and gen buckets to find best first two? search space too big...
+# or pick two first guesses and gen buckets to find best first two?
+# search space too big...
 #   maybe a pruning strategy, start only with reasonable guesses
 # maybe just find the best sum of squares with no letters in roate
 
@@ -25,6 +28,7 @@ def gen_solutions():
         for solution in SOLUTIONS.readlines():
             yield solution.strip()
 
+
 def gen_guesses():
     with open(FN_GUESS, 'r') as GUESSES:
         for guess in GUESSES.readlines():
@@ -43,13 +47,13 @@ def compare(sol, guess):
             out_str[i] = GREEN
             try:
                 unclaimed.pop(unclaimed.index(guess[i]))
-            except:
+            except IndexError:
                 # ugly error handling here
                 print('ERROR')
-                print('sol:',sol)
-                print('guess:',guess)
-                print('unclaimed:',unclaimed)
-                print('i:',i)
+                print('sol:', sol)
+                print('guess:', guess)
+                print('unclaimed:', unclaimed)
+                print('i:', i)
                 print('ERROR')
                 exit()
     for i in range(len(guess)):
@@ -63,6 +67,7 @@ def compare(sol, guess):
     out_str = ''.join(out_str)
     assert len(out_str) == 5
     return out_str
+
 
 def test_compare():
     # need more tests.
@@ -82,7 +87,7 @@ def test_compare():
 
     for t in tests:
         try:
-            if compare(t[0],t[1]) == t[2]:
+            if compare(t[0], t[1]) == t[2]:
                 print("PASS")
             else:
                 print(t[0])
@@ -91,36 +96,40 @@ def test_compare():
                 print(t[2])
                 print("FAIL")
         except AssertionError:
-            if t[2] == None:
+            if t[2] is None:
                 print("PASS")
             else:
                 print("FAIL")
 
 
-def all_patterns(guess):
+def all_patterns(guess, answers):
     patterns = {}
-    for sol in gen_solutions():
+    for sol in answers:
         p = compare(sol, guess)
         patterns[p] = patterns.get(p, 0) + 1
     return patterns
-        
 
-def guess_to_hint_counts(guess):
-    hints = all_patterns(guess)
-    return sorted(hints.items(), key=lambda x:x[1], reverse=True)
 
-def guess_to_largest_bucket_size(guess):
-    return guess_to_hint_counts(guess)[0][1]
+def guess_to_hint_counts(guess, answers):
+    hints = all_patterns(guess, answers)
+    return sorted(hints.items(), key=lambda x: x[1], reverse=True)
 
-def guess_to_num_buckets(guess):
-    return len(guess_to_hint_counts(guess))
 
-def guess_to_sum_squares(guess):
+def guess_to_largest_bucket_size(guess, answers):
+    return guess_to_hint_counts(guess, answers)[0][1]
+
+
+def guess_to_num_buckets(guess, answers):
+    return len(guess_to_hint_counts(guess, answers))
+
+
+def guess_to_sum_squares(guess, answers):
     total = 0
-    hint_counts = guess_to_hint_counts(guess)
+    hint_counts = guess_to_hint_counts(guess, answers)
     for h in hint_counts:
         total += h[1] ** 2
     return total
+
 
 def answers_guess_hint_to_answers(answers, guess, hint):
     new_answers = []
@@ -133,31 +142,12 @@ def answers_guess_hint_to_answers(answers, guess, hint):
     return new_answers
 
 
-records = {}
-MOST_BUCKETS = 0
-LEAST_BUCKETS = 1
-LARGEST_LARGEST_BUCKET = 2
-SMALLEST_LARGEST_BUCKET = 3
-LEAST_SQUARES = 4
-
-records[MOST_BUCKETS] = ("XXXXX", 0)
-records[LEAST_BUCKETS] = ("XXXXX", 999999)
-records[LARGEST_LARGEST_BUCKET] = ("XXXXX", 0)
-records[SMALLEST_LARGEST_BUCKET] = ("XXXXX", 999999)
-records[LEAST_SQUARES] = ("XXXXX", 9999999)
-
-
 def least_squares(answers, guesses):
     least_sum_squares = 9999999
     best_guess = "XXXXX"
     for guess in guesses:
-        sum_squares = guess_to_sum_squares(guess)
+        sum_squares = guess_to_sum_squares(guess, answers)
         if sum_squares < least_sum_squares:
             best_guess = guess
             least_sum_squares = sum_squares
     return (best_guess, least_sum_squares)
-
-
-
-
-
