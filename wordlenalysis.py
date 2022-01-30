@@ -107,21 +107,51 @@ def guess_to_largest_bucket_size(guess):
 
 def guess_to_num_buckets(guess):
     return len(guess_to_hint_counts(guess))
-    
+
+def guess_to_sum_squares(guess):
+    total = 0
+    hint_counts = guess_to_hint_counts(guess)
+    for h in hint_counts:
+        total += h[1] ** 2
+    return total
+
+# print('ARISE sum squares: ' + str(guess_to_sum_squares('arise')))
+# print('AESIR sum squares: ' + str(guess_to_sum_squares('aesir')))
+# input()
+
+
 records = {}
 MOST_BUCKETS = 0
 LEAST_BUCKETS = 1
 LARGEST_LARGEST_BUCKET = 2
 SMALLEST_LARGEST_BUCKET = 3
+LEAST_SQUARES = 4
+
 records[MOST_BUCKETS] = ("XXXXX", 0)
 records[LEAST_BUCKETS] = ("XXXXX", 999999)
 records[LARGEST_LARGEST_BUCKET] = ("XXXXX", 0)
 records[SMALLEST_LARGEST_BUCKET] = ("XXXXX", 999999)
+records[LEAST_SQUARES] = ("XXXXX", 9999999)
+
+notice = ('Iterating through all possible guesses.\n'
+    + 'Each guess divides the solutions into a series of buckets.\n'
+    + 'We are squaring the size of these buckets, then summing those '
+    + 'squares.\n'
+    + 'The smallest sum of squares should give us the best odds of '
+    + 'reducing the possible solutions by the greatest amount.')
+print(notice)
+print()
 
 for guess in gen_guesses():
     hints = guess_to_hint_counts(guess)
-    num_buckets = guess_to_num_buckets(guess)
-    largest_bucket_size = guess_to_largest_bucket_size(guess)
+    # num_buckets = guess_to_num_buckets(guess)
+    # largest_bucket_size = guess_to_largest_bucket_size(guess)
+
+    least_squares = guess_to_sum_squares(guess)
+    if least_squares < records[LEAST_SQUARES][1]:
+        records[LEAST_SQUARES] = (guess, least_squares)
+    
+    '''
     if num_buckets > records[MOST_BUCKETS][1]:
         records[MOST_BUCKETS] = (guess, num_buckets)
     if num_buckets < records[LEAST_BUCKETS][1]:
@@ -130,8 +160,10 @@ for guess in gen_guesses():
         records[LARGEST_LARGEST_BUCKET] = (guess, largest_bucket_size)
     if largest_bucket_size < records[SMALLEST_LARGEST_BUCKET][1]:
         records[SMALLEST_LARGEST_BUCKET] = (guess, largest_bucket_size)
-    print(guess + ": " + str(records), sep='', end='\r')
-    
+    '''
+    print(guess + ": " + "BEST GUESS SO FAR: " + records[4][0] + " SUM SQUARES: " + str(records[4][1]), sep='', end='\r')
+
+print()
 print(records)
 
 
