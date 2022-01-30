@@ -6,9 +6,12 @@ abspath = os.path.abspath(sys.argv[0])
 DIRNAME = os.path.dirname(abspath)
 os.chdir(DIRNAME)
 
-YELLOW = "/"
-GREEN = "*"
-GRAY = "_"
+" ☆★"
+"□▤▦"
+"□▧▩"
+RESULTS = "□▣■"
+GRAY, YELLOW, GREEN = list(RESULTS)
+
 
 def gen_solutions():
     with open(FN_SOLVE, 'r') as SOLUTIONS:
@@ -87,9 +90,6 @@ def test_compare():
                 print("FAIL")
 
 
-test_compare()
-exit()
-
 def all_patterns(guess):
     patterns = {}
     for sol in gen_solutions():
@@ -98,7 +98,45 @@ def all_patterns(guess):
     return patterns
         
 
-for guess in gen_guesses():
-    print(all_patterns(guess))
-    input()
+def guess_to_hint_counts(guess):
+    hints = all_patterns(guess)
+    return sorted(hints.items(), key=lambda x:x[1], reverse=True)
+
+def guess_to_largest_bucket_size(guess):
+    return guess_to_hint_counts(guess)[0][1]
+
+def guess_to_num_buckets(guess):
+    return len(guess_to_hint_counts(guess))
     
+records = {}
+MOST_BUCKETS = 0
+LEAST_BUCKETS = 1
+LARGEST_LARGEST_BUCKET = 2
+SMALLEST_LARGEST_BUCKET = 3
+records[MOST_BUCKETS] = ("XXXXX", 0)
+records[LEAST_BUCKETS] = ("XXXXX", 999999)
+records[LARGEST_LARGEST_BUCKET] = ("XXXXX", 0)
+records[SMALLEST_LARGEST_BUCKET] = ("XXXXX", 999999)
+
+for guess in gen_guesses():
+    hints = guess_to_hint_counts(guess)
+    num_buckets = guess_to_num_buckets(guess)
+    largest_bucket_size = guess_to_largest_bucket_size(guess)
+    if num_buckets > records[MOST_BUCKETS][1]:
+        records[MOST_BUCKETS] = (guess, num_buckets)
+        print(records)
+    if num_buckets < records[LEAST_BUCKETS][1]:
+        records[LEAST_BUCKETS] = (guess, num_buckets)
+        print(records)
+    if largest_bucket_size > records[LARGEST_LARGEST_BUCKET][1]:
+        records[LARGEST_LARGEST_BUCKET] = (guess, largest_bucket_size)
+        print(records)
+    if largest_bucket_size < records[SMALLEST_LARGEST_BUCKET][1]:
+        records[SMALLEST_LARGEST_BUCKET] = (guess, largest_bucket_size)
+        print(records)
+    
+print(records)
+
+
+
+
