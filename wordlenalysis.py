@@ -1,5 +1,12 @@
 import os, sys
 
+# TODO - add "answer_list" as a function variable to filter to each function below
+# so you can search for best second guesses
+
+# or pick two first guesses and gen buckets to find best first two? search space too big...
+#   maybe a pruning strategy, start only with reasonable guesses
+# maybe just find the best sum of squares with no letters in roate
+
 FN_SOLVE = "wordle_solutions_alphabetized.txt"
 FN_GUESS = "wordle_complete_dictionary.txt"
 abspath = os.path.abspath(sys.argv[0])
@@ -115,9 +122,15 @@ def guess_to_sum_squares(guess):
         total += h[1] ** 2
     return total
 
-# print('ARISE sum squares: ' + str(guess_to_sum_squares('arise')))
-# print('AESIR sum squares: ' + str(guess_to_sum_squares('aesir')))
-# input()
+def answers_guess_hint_to_answers(answers, guess, hint):
+    new_answers = []
+    for a in answers:
+        if compare(a, guess) == hint:
+            new_answers.append(a)
+    if new_answers == []:
+        print('WARNING: NO MATCHING SOLUTIONS!')
+        input()
+    return new_answers
 
 
 records = {}
@@ -133,38 +146,17 @@ records[LARGEST_LARGEST_BUCKET] = ("XXXXX", 0)
 records[SMALLEST_LARGEST_BUCKET] = ("XXXXX", 999999)
 records[LEAST_SQUARES] = ("XXXXX", 9999999)
 
-notice = ('Iterating through all possible guesses.\n'
-    + 'Each guess divides the solutions into a series of buckets.\n'
-    + 'We are squaring the size of these buckets, then summing those '
-    + 'squares.\n'
-    + 'The smallest sum of squares should give us the best odds of '
-    + 'reducing the possible solutions by the greatest amount.')
-print(notice)
-print()
 
-for guess in gen_guesses():
-    hints = guess_to_hint_counts(guess)
-    # num_buckets = guess_to_num_buckets(guess)
-    # largest_bucket_size = guess_to_largest_bucket_size(guess)
+def least_squares(answers, guesses):
+    least_sum_squares = 9999999
+    best_guess = "XXXXX"
+    for guess in guesses:
+        sum_squares = guess_to_sum_squares(guess)
+        if sum_squares < least_sum_squares:
+            best_guess = guess
+            least_sum_squares = sum_squares
+    return (best_guess, least_sum_squares)
 
-    least_squares = guess_to_sum_squares(guess)
-    if least_squares < records[LEAST_SQUARES][1]:
-        records[LEAST_SQUARES] = (guess, least_squares)
-    
-    '''
-    if num_buckets > records[MOST_BUCKETS][1]:
-        records[MOST_BUCKETS] = (guess, num_buckets)
-    if num_buckets < records[LEAST_BUCKETS][1]:
-        records[LEAST_BUCKETS] = (guess, num_buckets)
-    if largest_bucket_size > records[LARGEST_LARGEST_BUCKET][1]:
-        records[LARGEST_LARGEST_BUCKET] = (guess, largest_bucket_size)
-    if largest_bucket_size < records[SMALLEST_LARGEST_BUCKET][1]:
-        records[SMALLEST_LARGEST_BUCKET] = (guess, largest_bucket_size)
-    '''
-    print(guess + ": " + "BEST GUESS SO FAR: " + records[4][0] + " SUM SQUARES: " + str(records[4][1]), sep='', end='\r')
-
-print()
-print(records)
 
 
 
