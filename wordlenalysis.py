@@ -17,16 +17,15 @@ RESULTS = list(RESULT_OPTIONS[0])
 GRAY, YELLOW, GREEN = RESULTS
 
 
-def gen_solutions():
-    with open(FN_SOLVE, 'r') as SOLUTIONS:
-        for solution in SOLUTIONS.readlines():
-            yield solution.strip()
+SOLUTIONS = []
+with open(FN_SOLVE, 'r') as SOLUTIONS_FILE:
+    for solution in SOLUTIONS_FILE.readlines():
+        SOLUTIONS.append(solution.strip().upper())
 
-
-def gen_guesses():
-    with open(FN_GUESS, 'r') as GUESSES:
-        for guess in GUESSES.readlines():
-            yield guess.strip()
+GUESSES = []
+with open(FN_GUESS, 'r') as GUESSES_FILE:
+    for guess in GUESSES_FILE.readlines():
+        GUESSES.append(guess.strip().upper())
 
 
 def compare(sol, guess):
@@ -140,7 +139,7 @@ def least_squares(answers, guesses):
     least_sum_squares = 9999999
     best_guess = "XXXXX"
     for guess in guesses:
-        print(guess + '\r', end='')
+        print(guess + '   CURRENT BEST GUESS: ', best_guess, ' SCORE: ', least_sum_squares, end='\r')
         sum_squares = guess_to_sum_squares(guess, answers)
         if sum_squares < least_sum_squares:
             best_guess = guess
@@ -148,8 +147,15 @@ def least_squares(answers, guesses):
     print()
     return (best_guess, least_sum_squares)
 
+# new_ans = answers_guess_hint_to_answers(SOLUTIONS, 'RAISE', GRAY * 5)
+# print(guess_to_hint_counts('RAISE', SOLUTIONS))
+
+if __name__ == "__main__":
+    print(least_squares(SOLUTIONS, GUESSES))
+
+    
 # generalize the below to find the best second guesses after ROATE or ARISE
-# new_ans = answers_guess_hint_to_answers(gen_solutions(), 'ROATE', GRAY * 5)
-# new_best_guess = least_squares(new_ans, gen_guesses())
+# new_ans = answers_guess_hint_to_answers(SOLUTIONS, 'ROATE', GRAY * 5)
+# new_best_guess = least_squares(new_ans, GUESSES)
 # print(new_best_guess)
 # input()
