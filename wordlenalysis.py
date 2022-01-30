@@ -1,14 +1,7 @@
 import os
 import sys
 
-# TODO - add "answer_list" as a function variable to filter to each
-# function below
-# so you can search for best second guesses
-
-# or pick two first guesses and gen buckets to find best first two?
-# search space too big...
-#   maybe a pruning strategy, start only with reasonable guesses
-# maybe just find the best sum of squares with no letters in roate
+# TODO - find best second moves
 
 FN_SOLVE = "wordle_solutions_alphabetized.txt"
 FN_GUESS = "wordle_complete_dictionary.txt"
@@ -16,11 +9,12 @@ abspath = os.path.abspath(sys.argv[0])
 DIRNAME = os.path.dirname(abspath)
 os.chdir(DIRNAME)
 
-" ☆★"
-"□▤▦"
-"□▧▩"
-RESULTS = "□▣■"
-GRAY, YELLOW, GREEN = list(RESULTS)
+RESULT_OPTIONS = ["□▣■",
+                  "□▤▦",
+                  "□▧▩",
+                  " ☆★"]
+RESULTS = list(RESULT_OPTIONS[0])
+GRAY, YELLOW, GREEN = RESULTS
 
 
 def gen_solutions():
@@ -146,8 +140,16 @@ def least_squares(answers, guesses):
     least_sum_squares = 9999999
     best_guess = "XXXXX"
     for guess in guesses:
+        print(guess + '\r', end='')
         sum_squares = guess_to_sum_squares(guess, answers)
         if sum_squares < least_sum_squares:
             best_guess = guess
             least_sum_squares = sum_squares
+    print()
     return (best_guess, least_sum_squares)
+
+# generalize the below to find the best second guesses after ROATE or ARISE
+# new_ans = answers_guess_hint_to_answers(gen_solutions(), 'ROATE', GRAY * 5)
+# new_best_guess = least_squares(new_ans, gen_guesses())
+# print(new_best_guess)
+# input()
