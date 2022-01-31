@@ -159,6 +159,7 @@ def best_guess(answers, guesses):
         if sum_squares < least_sum_squares:
             tmp_best_guess = guess
             least_sum_squares = sum_squares
+    print()
     return tmp_best_guess
 
 
@@ -208,4 +209,7 @@ def solution_path(answer, first_guess=None):
 
 
 if __name__ == "__main__":
-    print(solution_path('DOING', 'TOISE'))
+    path = solution_path('DIGIT', 'LIGHT')
+    print()
+    # print(results_to_answers(path[:-3], SOLUTIONS))
+    
