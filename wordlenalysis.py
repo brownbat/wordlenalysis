@@ -3,6 +3,13 @@ import sys
 
 # TODO - optimize least squares
 # TODO - store solutions list at each step of solver for debugging
+# TODO - count moves -- len(solutions_path()) basically
+# TODO - more specific -- drill down worldle solutions by removing the
+#        ones that have already passed
+# TODO - see if best first guess will change over time
+# TODO - more general -- see which strategy efficiently finds ANY word in
+#        legal guesses, ignore solutions dictionary
+# TODO - document, tests, refactor
 
 FN_SOLVE = "wordle_solutions_alphabetized.txt"
 FN_GUESS = "wordle_complete_dictionary.txt"
@@ -142,18 +149,17 @@ def answers_guess_hint_to_answers(answers, guess, hint):
     return new_answers
 
 
-def least_squares(answers, guesses):
+def best_guess(answers, guesses):
     least_sum_squares = 9999999
-    best_guess = "XXXXX"
+    tmp_best_guess = "XXXXX"
     for guess in guesses:
-        print(guess + '   CURRENT BEST GUESS: ', best_guess, ' SCORE: ',
+        print(guess + '   CURRENT BEST GUESS: ', tmp_best_guess, ' SCORE: ',
               least_sum_squares, end='          \r')
         sum_squares = guess_to_sum_squares(guess, answers)
         if sum_squares < least_sum_squares:
-            best_guess = guess
+            tmp_best_guess = guess
             least_sum_squares = sum_squares
-    print()
-    return (best_guess, least_sum_squares)
+    return tmp_best_guess
 
 
 def best_second_guess(guess, answers=SOLUTIONS):
@@ -162,7 +168,7 @@ def best_second_guess(guess, answers=SOLUTIONS):
     for hc in hint_counts:
         hint = hc[0]
         new_ans = answers_guess_hint_to_answers(answers, guess, hint)
-        second_guesses.append((hint, least_squares(new_ans, GUESSES)[0]))
+        second_guesses.append((hint, best_guess(new_ans, GUESSES)))
     return second_guesses
 
 
@@ -179,10 +185,10 @@ def results_to_answers(guess_hints, answers):
 
 def results_to_best_guess(guess_hints, answers):
     new_ans = results_to_answers(guess_hints, answers)
-    return least_squares(new_ans, GUESSES)[0]
+    return best_guess(new_ans, GUESSES)
 
 
-def solution_path(answer, first_guess = None):
+def solution_path(answer, first_guess=None):
     new_ans = SOLUTIONS.copy()
     gh = []
     if first_guess:
@@ -190,9 +196,9 @@ def solution_path(answer, first_guess = None):
         hint = guess_to_hint(answer, first_guess)
         gh.append([first_guess, hint])
         new_ans = answers_guess_hint_to_answers(new_ans, first_guess, hint)
-        
+
     while len(new_ans) > 1:
-        guess = least_squares(new_ans, GUESSES)[0]
+        guess = best_guess(new_ans, GUESSES)
         hint = guess_to_hint(answer, guess)
         gh.append([guess, hint])
         new_ans = answers_guess_hint_to_answers(new_ans, guess, hint)
@@ -202,4 +208,4 @@ def solution_path(answer, first_guess = None):
 
 
 if __name__ == "__main__":
-    print(solution_path('DOING', 'SULCI'))
+    print(solution_path('DOING', 'TOISE'))
