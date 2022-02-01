@@ -1,15 +1,16 @@
 import os
 import sys
+import multiprocessing
 
-# TODO - optimize least squares
-# TODO - store solutions list at each step of solver for debugging
-# TODO - count moves -- len(solutions_path()) basically
+# TODO - optimize best guess somehow, but not sure how
+# TODO - multiprocessing is kind of a mess, makes the output while
+#        processing really chaotic, doesn't seem that much faster, but
+#        not sure how to improve it
 # TODO - more specific -- drill down worldle solutions by removing the
-#        ones that have already passed
-# TODO - see if best first guess will change over time
+#        ones that have already passed; see if best first guess changes
+#        over time
 # TODO - more general -- see which strategy efficiently finds ANY word in
 #        legal guesses, ignore solutions dictionary
-# TODO - document, tests, refactor
 
 FN_SOLVE = "wordle_solutions_alphabetized.txt"
 FN_GUESS = "wordle_complete_dictionary.txt"
@@ -43,8 +44,31 @@ with open(FN_GUESS, 'r') as GUESSES_FILE:
 
 
 def guess_to_hint(sol, guess):
-    assert type(guess) == type(sol) == str
-    assert len(guess) == len(sol) == 5
+    """Responds with a hint given a five letter solution str 'sol' and a
+    five letter guess str 'guess'
+
+    Hint strings can be built by adding combinations of GREEN, YELLOW,
+    and GRAY, which are constants that can be set to individual unicode
+    characters using constants RESULT_OPTIONS and RESULTS up above.
+    This allows, e.g.,
+      'GRAY * 5'
+    to represent a hint where no letters
+    in the guess are found anywhere in the answer, or
+      YELLOW * 2 + GRAY * 3
+    for the case where the first two letters are found somewhere in the
+    answer (but not in those places) and the last three are not.
+    """
+
+    try:
+        assert type(guess) == type(sol) == str
+        assert len(guess) == len(sol) == 5
+    except AssertionError:
+        error_message = (
+            f'''sol:{sol}, guess:{guess}, types:{type(sol)},
+                {type(guess)}, lens:{len(sol)}, {len(guess)}'''
+            )
+        print(error_message)
+        exit()
     guess = guess.upper()
     sol = sol.upper()
     out_str = list("     ")
@@ -55,13 +79,16 @@ def guess_to_hint(sol, guess):
             try:
                 unclaimed.pop(unclaimed.index(guess[i]))
             except IndexError:
-                # ugly error handling here
-                print('ERROR')
-                print('sol:', sol)
-                print('guess:', guess)
-                print('unclaimed:', unclaimed)
-                print('i:', i)
-                print('ERROR')
+                error_message = (
+                    f"""ERROR\n
+                    sol: {sol}\n
+                    guess:{guess}\n
+                    unclaimed:{unclaimed}\n
+                    i:{i}\n
+                    ERROR\n
+                    """
+                    )
+                print(error_message)
                 exit()
     for i in range(len(guess)):
         if guess[i] != sol[i]:
@@ -77,8 +104,10 @@ def guess_to_hint(sol, guess):
 
 
 def test_guess_to_hint():
-    # need more tests.
-    # i think abbba,bacon is testing lookahead, but could use more
+    """Iterates through 'tests', a list of [solution,guess,hint] tuples,
+    to ensure guess_to_hint() generates the correct expected hints.
+    """
+
     tests = [
                 ["HELIX", "hello", GREEN * 3 + GRAY * 2],
                 ["AAAAA", "BBBBB", GRAY * 5],
@@ -110,6 +139,10 @@ def test_guess_to_hint():
 
 
 def all_patterns(guess, answers):
+    """return a dictionary of all possible hints and their frequency,
+    {hints: count}, in response to running a guess against all possible
+    answers in a list of answers"""
+
     patterns = {}
     for sol in answers:
         p = guess_to_hint(sol, guess)
@@ -118,19 +151,40 @@ def all_patterns(guess, answers):
 
 
 def guess_to_hint_counts(guess, answers):
+    """return a dictionary of hints:count for a guess and list of answers
+
+    reverse sorted, so most likely hint is first
+    """
     hints = all_patterns(guess, answers)
     return sorted(hints.items(), key=lambda x: x[1], reverse=True)
 
 
 def guess_to_largest_bucket_size(guess, answers):
+    """Num occurrences of the most frequent hint from guess, answers
+    """
     return guess_to_hint_counts(guess, answers)[0][1]
 
 
 def guess_to_num_buckets(guess, answers):
+    """Num distinct hints from a guess, answers list
+    """
     return len(guess_to_hint_counts(guess, answers))
 
 
 def guess_to_sum_squares(guess, answers):
+    """Rates a guess based on how likely it is to reduce the remaining
+    guesses
+
+    Each possible hint puts you in a bucket of remaining viable answers.
+    You want your answer to have the greatest likelihood of landing you
+    in the smallest possible bucket.
+
+    AESIR is minimax, the maximum possible bucket is lower than any
+    other, but ROATE is better at least squares because it has a larger
+    largest hint bucket, but so many smaller secondary buckets it ends up
+    more likely to reduce your search space in general.
+    """
+
     total = 0
     hint_counts = guess_to_hint_counts(guess, answers)
     for h in hint_counts:
@@ -139,6 +193,10 @@ def guess_to_sum_squares(guess, answers):
 
 
 def answers_guess_hint_to_answers(answers, guess, hint):
+    """Reduces an answer set to remaining viable answers by applying a
+    guess and a hint.
+    """
+
     new_answers = []
     for a in answers:
         if guess_to_hint(a, guess) == hint:
@@ -150,6 +208,11 @@ def answers_guess_hint_to_answers(answers, guess, hint):
 
 
 def best_guess(answers, guesses):
+    """Finds the best next guess given a set of answers and guesses
+
+    uses guess_to_sum_squares() to rate guesses and returns the best one
+    """
+
     least_sum_squares = 9999999
     tmp_best_guess = "XXXXX"
     for guess in guesses:
@@ -163,7 +226,18 @@ def best_guess(answers, guesses):
     return tmp_best_guess
 
 
+def best_guess_all_answers(guesses):
+    """Returns the best guess (hard coding the maximum answer set)
+
+    One-argument helper function for multiprocessing
+    """
+    return best_guess(SOLUTIONS, guesses)
+
+
 def best_second_guess(guess, answers=SOLUTIONS):
+    """After a given guess, against a set of solutions, what's your best
+    second guess in response to each possible hint?
+    """
     hint_counts = guess_to_hint_counts(guess, answers)
     second_guesses = []
     for hc in hint_counts:
@@ -174,6 +248,10 @@ def best_second_guess(guess, answers=SOLUTIONS):
 
 
 def results_to_answers(guess_hints, answers):
+    """Provide remaining valid answers matching a list of guesses and
+    corresponding hints
+    """
+
     gh_stack = guess_hints.copy()
     new_ans = answers.copy()
     while len(gh_stack) > 0:
@@ -185,11 +263,24 @@ def results_to_answers(guess_hints, answers):
 
 
 def results_to_best_guess(guess_hints, answers):
+    """Solver. Returns best next guess after a series of moves and hints.
+    """
+
     new_ans = results_to_answers(guess_hints, answers)
     return best_guess(new_ans, GUESSES)
 
 
 def solution_path(answer, first_guess=None):
+    """Use the solver best_guess() to find a series of guesses
+    and resulting hints, a full path of guesses and hints
+
+    A first guess can be specified to cut down the largest search time,
+    or to rate initial guesses off one another.
+
+    len(solution_path) can count the moves it takes from an initial
+    guess to a solution using this method
+    """
+
     new_ans = SOLUTIONS.copy()
     gh = []
     if first_guess:
@@ -209,7 +300,16 @@ def solution_path(answer, first_guess=None):
 
 
 if __name__ == "__main__":
-    path = solution_path('DIGIT', 'LIGHT')
-    print()
-    # print(results_to_answers(path[:-3], SOLUTIONS))
-    
+    multiprocessing.freeze_support()
+
+    num_procs = 6
+    guesses_sliced = []
+    slice_length = len(GUESSES) // num_procs
+    for i in range(num_procs):
+        this_slice = GUESSES[i*slice_length:(i+1)*slice_length]
+        guesses_sliced.append(this_slice)
+
+    with multiprocessing.Pool(processes=num_procs) as pool:
+        contenders = pool.map(best_guess_all_answers, guesses_sliced)
+    bg = best_guess(SOLUTIONS, contenders)
+    print(bg)
