@@ -14,6 +14,10 @@ import multiprocessing
 
 FN_SOLVE = "wordle_solutions_alphabetized.txt"
 FN_GUESS = "wordle_complete_dictionary.txt"
+FN_BEST_GUESSES = "wordle_best_guesses.txt"
+
+FN_BEST_GUESSES_COPY = "wordle_best_guesses_copy.txt"
+
 abspath = os.path.abspath(sys.argv[0])
 DIRNAME = os.path.dirname(abspath)
 os.chdir(DIRNAME)
@@ -64,8 +68,9 @@ def guess_to_hint(sol, guess):
         assert len(guess) == len(sol) == 5
     except AssertionError:
         error_message = (
-            f'''sol:{sol}, guess:{guess}, types:{type(sol)},
-                {type(guess)}, lens:{len(sol)}, {len(guess)}'''
+            f'''ERROR: guess_to_hint BAD INPUT\nsol:{sol}, guess:{guess},
+                types:{type(sol)}, {type(guess)}, lens:{len(sol)},
+                {len(guess)}'''
             )
         print(error_message)
         exit()
@@ -299,7 +304,58 @@ def solution_path(answer, first_guess=None):
     return gh
 
 
-if __name__ == "__main__":
+def guess_is_perfect(sol, guess):
+    sol = sol.upper()
+    hint = guess_to_hint(sol, guess)
+    new_answers = []
+    for a in SOLUTIONS:
+        if guess_to_hint(a, guess) == hint:
+            if a != sol:
+                return False
+    return True
+
+
+def perfect_guesses_list(answer, guesses):
+    """Determine set of guesses that could allow finding the answer in
+    two moves, if any.
+    """
+
+    perfect_guesses = []
+    for guess in guesses:
+        if guess_is_perfect(answer, guess):
+            perfect_guesses.append(guess)
+    return perfect_guesses
+
+
+"""with open(FN_BEST_GUESSES, 'w') as BG_FILE:
+    best_guesses_dictionary = {}
+    for s in SOLUTIONS:
+        pgs = perfect_guesses_list(s, GUESSES)
+        best_guesses_dictionary[s] = pgs
+        BG_FILE.write(s + ':' + str(pgs) + '\n')
+        print(s, len(pgs))
+
+    print('Ready?')
+    input()
+    print(best_guesses_dictionary)"""
+
+"""with open(FN_BEST_GUESSES_COPY, 'r') as BG_FILE:
+    freq_dict = {}
+    for line in BG_FILE.readlines():
+        tmp_line = line[8:-3]
+        tmp_line_list = tmp_line.split("', '")
+        for word in tmp_line_list:
+            freq_dict[word] = freq_dict.get(word, 0) + 1
+
+new_dict = dict(sorted(freq_dict.items(), key=lambda item: item[1], reverse=True))
+for item in new_dict:
+    print(item, new_dict[item])
+    input()"""
+
+print(solution_path('robin','rotan'))
+
+
+"""if __name__ == "__main__":
     multiprocessing.freeze_support()
 
     num_procs = 6
@@ -312,4 +368,4 @@ if __name__ == "__main__":
     with multiprocessing.Pool(processes=num_procs) as pool:
         contenders = pool.map(best_guess_all_answers, guesses_sliced)
     bg = best_guess(SOLUTIONS, contenders)
-    print(bg)
+    print(bg)"""
