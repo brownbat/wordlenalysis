@@ -352,7 +352,7 @@ for item in new_dict:
     print(item, new_dict[item])
     input()"""
 
-print(solution_path('robin','rotan'))
+print(solution_path('robin','salon'))
 
 
 """if __name__ == "__main__":
