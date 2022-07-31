@@ -32,7 +32,7 @@ RESULT_OPTIONS = ["□▣■",
 # that test cases are harder to type. " YG" maybe best here.
 
 
-RESULTS = list(RESULT_OPTIONS[0])
+RESULTS = list(RESULT_OPTIONS[4])
 GRAY, YELLOW, GREEN = RESULTS
 
 
@@ -267,12 +267,29 @@ def results_to_answers(guess_hints, answers):
     return new_ans
 
 
-def results_to_best_guess(guess_hints, answers):
+def results_to_best_guess(guess_hints, answers=SOLUTIONS):
     """Solver. Returns best next guess after a series of moves and hints.
     """
 
     new_ans = results_to_answers(guess_hints, answers)
     return best_guess(new_ans, GUESSES)
+
+guess_hints = [
+['ARISE','     '],
+['CLOUT','  Y  '],
+['minds','     '],
+['hijab','     '],
+['prime','     '],
+['lipid','     '],
+['blind','     '],
+['frank','f   ']
+
+]
+
+
+print(results_to_best_guess(guess_hints,answers=GUESSES))
+print(results_to_answers(guess_hints,answers=GUESSES))
+exit()
 
 
 def solution_path(answer, first_guess=None):
@@ -352,7 +369,7 @@ for item in new_dict:
     print(item, new_dict[item])
     input()"""
 
-print(solution_path('robin','salon'))
+# print(solution_path('robin','salon'))
 
 
 """if __name__ == "__main__":
